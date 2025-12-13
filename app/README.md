@@ -1,3 +1,29 @@
+# Visual Narrative — Spotify Global Music
+
+This React app demonstrates a visual narrative built for music industry decision-makers — record label executives, music producers, marketing strategists, and independent artists.
+
+Overview
+- **Target audience**: Music executives, producers, marketers, and artists who need to make data-driven decisions.
+- **User needs**: Identify emerging trends, compare song audio & metadata features, prioritize songs/artists for promotion, and adjust marketing strategies.
+- **Data**: CSV files in `public/data/` (track-level and cleaned Spotify data).
+- **Visualization tools**: React + D3 only — no extra chart libraries.
+
+Run the visualization locally
+```bash
+cd app
+npm install
+npm start
+```
+Open http://localhost:3000 to view the visual narrative.
+
+What the narrative provides
+- A line chart showing average track popularity over time.
+- A scatter/bubble chart comparing track duration and popularity sized by artist followers.
+- A dropdown filter for genres and interactive tooltips for track details.
+
+Notes
+- D3 is used to parse CSV and build SVG visualizations. The app loads CSVs from `public/data/`.
+- If you add new CSVs, ensure they follow the existing schema (columns used: `track_popularity`, `track_duration_ms`, `artist_followers`, `album_release_date`, `artist_genres`).
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
