@@ -106,15 +106,6 @@ function VisualNarrative() {
     }
   }
 
-  function formatGenres(genres, max = 2) {
-    if (!Array.isArray(genres) || !genres.length) return '';
-    const trimmed = genres.slice(0, max).map(g => g.trim()).filter(Boolean);
-    if (!trimmed.length) return '';
-    const suffix = trimmed.join(', ');
-    const ellipsis = genres.length > max ? '…' : '';
-    return ` (${suffix}${ellipsis})`;
-  }
-
   function hasPopularityScore(value) {
     return typeof value === 'number' && !Number.isNaN(value);
   }
@@ -279,6 +270,7 @@ function VisualNarrative() {
       .attr('x', d => x(d.genre)).attr('y', d => y(d.count)).attr('width', x.bandwidth()).attr('height', d => innerH - y(d.count))
       .attr('fill', '#2ca02c').attr('opacity', 0.8)
       .on('mouseover', (e, d) => showTooltip(e, `${d.genre}: ${d.count} tracks`))
+      .on('mousemove', (e, d) => showTooltip(e, `${d.genre}: ${d.count} tracks`))
       .on('mouseout', hideTooltip);
   }
 
@@ -332,6 +324,7 @@ function VisualNarrative() {
       .attr('height', d => innerH - y(d.length))
       .attr('fill', '#d62728').attr('opacity', 0.8)
       .on('mouseover', (e, d) => showTooltip(e, `${d.x0.toFixed(1)}-${d.x1.toFixed(1)} min: ${d.length} tracks`))
+      .on('mousemove', (e, d) => showTooltip(e, `${d.x0.toFixed(1)}-${d.x1.toFixed(1)} min: ${d.length} tracks`))
       .on('mouseout', hideTooltip);
   }
 
@@ -434,6 +427,7 @@ function VisualNarrative() {
       .attr('r', 3)
       .attr('fill', '#1f77b4')
       .on('mouseover', (e, d) => showTooltip(e, `${d.year}: ${d.avg.toFixed(2)} min`))
+      .on('mousemove', (e, d) => showTooltip(e, `${d.year}: ${d.avg.toFixed(2)} min`))
       .on('mouseout', hideTooltip);
   }
 
@@ -482,7 +476,7 @@ function VisualNarrative() {
 
     const artistWithLabels = topArtists.map((d) => ({
       ...d,
-      label: `${d.name}${formatGenres(d.genres)}`
+      label: d.name
     }));
 
     const y = d3.scaleBand()
@@ -528,7 +522,14 @@ function VisualNarrative() {
       .attr('height', y.bandwidth())
       .attr('fill', '#9467bd')
       .attr('opacity', 0.85)
-      .on('mouseover', (e, d) => showTooltip(e, `${d.name}${formatGenres(d.genres)}: ${(d.followers / 1e6).toFixed(2)}M followers`))
+      .on('mouseover', (e, d) => {
+        const genreText = d.genres.length > 0 ? `<br/>Genre: ${d.genres.slice(0, 2).join(', ')}${d.genres.length > 2 ? '...' : ''}` : '';
+        showTooltip(e, `<strong>${d.name}</strong>${genreText}<br/>Followers: ${(d.followers / 1e6).toFixed(2)}M`);
+      })
+      .on('mousemove', (e, d) => {
+        const genreText = d.genres.length > 0 ? `<br/>Genre: ${d.genres.slice(0, 2).join(', ')}${d.genres.length > 2 ? '...' : ''}` : '';
+        showTooltip(e, `<strong>${d.name}</strong>${genreText}<br/>Followers: ${(d.followers / 1e6).toFixed(2)}M`);
+      })
       .on('mouseout', hideTooltip);
 
     g.selectAll('.value-label')
@@ -590,7 +591,7 @@ function VisualNarrative() {
     const innerH = height - margin.top - margin.bottom;
 
     const x = d3.scaleLinear().domain([0, 100]).range([0, innerW]);
-    const trackLabelLookup = new Map(topTracks.map(d => [d.id, `${d.name}${formatGenres(d.genres)}`]));
+    const trackLabelLookup = new Map(topTracks.map(d => [d.id, d.name]));
     const y = d3.scaleBand().domain(topTracks.map(d => d.id)).range([0, innerH]).padding(0.25);
 
     // Color scale from hot pink to lighter pink
@@ -621,7 +622,11 @@ function VisualNarrative() {
       .attr('fill', (d, i) => colorScale(i))
       .attr('rx', 3).attr('ry', 3)
       .on('mouseover', (e, d) => {
-        const genreText = formatGenres(d.genres);
+        const genreText = d.genres && d.genres.length > 0 ? `<br/>Genre: ${d.genres.slice(0, 2).join(', ')}${d.genres.length > 2 ? '...' : ''}` : '<br/>Genre: No genre data';
+        showTooltip(e, `<strong>#${d.rank} "${d.fullName}"</strong><br/>by ${d.artist}${genreText}<br/>Popularity: ${d.popularity}`);
+      })
+      .on('mousemove', (e, d) => {
+        const genreText = d.genres && d.genres.length > 0 ? `<br/>Genre: ${d.genres.slice(0, 2).join(', ')}${d.genres.length > 2 ? '...' : ''}` : '<br/>Genre: No genre data';
         showTooltip(e, `<strong>#${d.rank} "${d.fullName}"</strong><br/>by ${d.artist}${genreText}<br/>Popularity: ${d.popularity}`);
       })
       .on('mouseout', hideTooltip);
@@ -758,6 +763,7 @@ function VisualNarrative() {
       .attr('r', 3)
       .attr('fill', d => color(d.genre))
       .on('mouseover', (e, d) => showTooltip(e, `${d.genre} · ${d.year}: ${d.value.toFixed(1)}`))
+      .on('mousemove', (e, d) => showTooltip(e, `${d.genre} · ${d.year}: ${d.value.toFixed(1)}`))
       .on('mouseout', hideTooltip);
 
     const legend = g.append('g')
@@ -784,11 +790,37 @@ function VisualNarrative() {
     if (!tooltip.node()) {
       tooltip = d3.select('body').append('div').attr('id', 'vn-tooltip').attr('class', 'vn-tooltip');
     }
-    tooltip.style('left', (e.pageX + 12) + 'px').style('top', (e.pageY + 12) + 'px').style('opacity', 1).html(text);
+    
+    // Get mouse position relative to the page
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    // Show tooltip first to get its dimensions
+    tooltip.html(text).style('opacity', 1);
+    
+    // Get tooltip dimensions
+    const tooltipNode = tooltip.node();
+    const tooltipRect = tooltipNode.getBoundingClientRect();
+    
+    // Calculate position with offset
+    let left = x + 12;
+    let top = y + 12;
+    
+    // Prevent tooltip from going off the right edge
+    if (left + tooltipRect.width > window.innerWidth) {
+      left = x - tooltipRect.width - 12;
+    }
+    
+    // Prevent tooltip from going off the bottom edge
+    if (top + tooltipRect.height > window.innerHeight) {
+      top = y - tooltipRect.height - 12;
+    }
+    
+    tooltip.style('left', left + 'px').style('top', top + 'px');
   }
 
   function hideTooltip() {
-    d3.select('#vn-tooltip').style('opacity', 0).html('');
+    d3.select('#vn-tooltip').style('opacity', 0);
   }
 
   const allGenres = React.useMemo(() => {
