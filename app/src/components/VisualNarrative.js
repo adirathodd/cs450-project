@@ -22,8 +22,8 @@ function VisualNarrative() {
   // Load both datasets
   useEffect(() => {
     Promise.all([
-      d3.csv('/data/track_data_final.csv'),
-      d3.csv('/data/spotify_data clean.csv')
+      d3.csv(`${process.env.PUBLIC_URL}/data/track_data_final.csv`),
+      d3.csv(`${process.env.PUBLIC_URL}/data/spotify_data clean.csv`)
     ]).then(([historical, modern]) => {
       // Helper function to validate date
       const isValidDate = (dateStr) => {
